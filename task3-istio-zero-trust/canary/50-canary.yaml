@@ -1,0 +1,41 @@
+# Bonus: canary release via DestinationRule (subsets) + VirtualService (weights).
+# Subsets are keyed on the pod label `version`. Shift traffic by changing the
+# weights (90/10 -> 50/50 -> 0/100) and roll back instantly by reverting them.
+# A blue-green variant is the same objects with weights pinned 100/0 and flipped
+# to 0/100 in one step once v2 is verified.
+apiVersion: networking.istio.io/v1
+kind: DestinationRule
+metadata:
+  name: ledger-api
+  namespace: payments
+spec:
+  host: ledger-api.payments.svc.cluster.local
+  trafficPolicy:
+    tls:
+      mode: ISTIO_MUTUAL      # keep mTLS to the workload
+  subsets:
+    - name: v1
+      labels:
+        version: v1
+    - name: v2
+      labels:
+        version: v2
+---
+apiVersion: networking.istio.io/v1
+kind: VirtualService
+metadata:
+  name: ledger-api-canary
+  namespace: payments
+spec:
+  hosts:
+    - ledger-api.payments.svc.cluster.local
+  http:
+    - route:
+        - destination:
+            host: ledger-api.payments.svc.cluster.local
+            subset: v1
+          weight: 90
+        - destination:
+            host: ledger-api.payments.svc.cluster.local
+            subset: v2
+          weight: 10

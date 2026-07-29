@@ -1,0 +1,31 @@
+
+=== 1. mTLS STRICT — PeerAuthentication ===
+NAME      MODE     AGE
+default   STRICT   6m33s
+(tls-check: STRICT mode active on ledger-api)
+
+=== 2. mTLS — plaintext (non-mesh) request is REFUSED ===
+plaintext-HTTP=000nplaintext-REFUSED-connection-reset-mTLS-required
+
+=== 3. Identity-based AuthorizationPolicy ===
+-- AUTHORIZED (reporting SA) -> ledger-api /health --
+  http=200 (expect 200)
+-- UNAUTHORIZED (intruder SA) -> ledger-api /health --
+  http=403 (expect 403 RBAC: access denied)
+
+=== 4. NetworkPolicy (Calico) — egress containment / SSRF blast-radius = 0 ===
+-- ledger-api -> cloud metadata 169.254.169.254 (must be blocked) --
+  BLOCKED: TimeoutError timed out
+-- ledger-api -> external 1.1.1.1 (must be blocked) --
+  BLOCKED: TimeoutError timed out
+
+=== 5. NetworkPolicy — a pod NOT in the allow-list is blocked at L4 ===
+NP-allowed-http=000nBLOCKED-at-L4-NetworkPolicy-default-deny
+
+-- NetworkPolicies in namespace --
+NAME                         POD-SELECTOR                  AGE
+allow-dns-egress             <none>                        7m2s
+allow-istiod-egress          <none>                        7m2s
+default-deny-all             <none>                        7m2s
+ledger-api-ingress           app=ledger-api                7m2s
+reporting-to-ledger-egress   app in (intruder,reporting)   7m2s

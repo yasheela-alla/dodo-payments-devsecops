@@ -7,9 +7,10 @@ metadata:
     policies.kyverno.io/category: Supply Chain
     policies.kyverno.io/severity: medium
     policies.kyverno.io/description: >-
-      Images must carry an explicit, immutable tag. ':latest' and untagged
-      references are rejected because they make the deployed artifact
-      non-reproducible and defeat provenance verification.
+      Workload images must carry an explicit, immutable tag. ':latest' and
+      untagged references are rejected because they make the deployed artifact
+      non-reproducible and defeat provenance verification. Platform/system
+      namespaces are excluded.
 spec:
   validationFailureAction: Enforce
   background: true
@@ -19,6 +20,18 @@ spec:
         any:
           - resources:
               kinds: ["Pod"]
+      exclude: &infra
+        any:
+          - resources:
+              namespaces:
+                - kube-system
+                - kube-public
+                - kube-node-lease
+                - istio-system
+                - kyverno
+                - argocd
+                - ingress-nginx
+                - local-path-storage
       validate:
         message: "An image tag is required (untagged images are not allowed)."
         pattern:
@@ -30,6 +43,7 @@ spec:
         any:
           - resources:
               kinds: ["Pod"]
+      exclude: *infra
       validate:
         message: "Using ':latest' is not allowed; pin an immutable tag or digest."
         pattern:

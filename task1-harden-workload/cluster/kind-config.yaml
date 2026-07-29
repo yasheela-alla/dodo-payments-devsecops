@@ -1,10 +1,17 @@
 # kind cluster for the Dodo Payments assignment.
-#   create with:  kind create cluster --name dodo --config kind-config.yaml
+#   bootstrap with:  ../../scripts/bootstrap.sh   (installs Calico + full stack)
+#
+# The default CNI (kindnet) is DISABLED because it does not enforce
+# NetworkPolicy. Calico is installed by the bootstrap script so the Task 3
+# NetworkPolicy layer genuinely enforces (defence-in-depth under the Istio mesh).
 # The control-plane node is labelled ingress-ready and maps 80/443 to the host
 # so ingress-nginx (Task 1) and the Istio ingress gateway (Task 3) are reachable.
 kind: Cluster
 apiVersion: kind.x-k8s.io/v1alpha4
 name: dodo
+networking:
+  disableDefaultCNI: true      # replaced by Calico (NetworkPolicy enforcement)
+  podSubnet: "192.168.0.0/16"  # Calico default pod CIDR
 nodes:
   - role: control-plane
     kubeadmConfigPatches:

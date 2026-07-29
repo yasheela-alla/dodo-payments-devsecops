@@ -1,0 +1,46 @@
+# Bonus: expose ledger-api through the Istio ingress gateway with TLS
+# termination at the mesh edge. External TLS is terminated here; traffic then
+# travels to the workload over mTLS inside the mesh.
+apiVersion: networking.istio.io/v1
+kind: Gateway
+metadata:
+  name: ledger-gateway
+  namespace: payments
+spec:
+  selector:
+    istio: ingressgateway
+  servers:
+    - port:
+        number: 443
+        name: https
+        protocol: HTTPS
+      tls:
+        mode: SIMPLE
+        credentialName: ledger-tls   # k8s TLS secret in istio-system (see setup-gateway.sh)
+      hosts:
+        - "ledger.dodo.local"
+    - port:
+        number: 80
+        name: http
+        protocol: HTTP
+      hosts:
+        - "ledger.dodo.local"
+      tls:
+        httpsRedirect: true          # force TLS
+---
+apiVersion: networking.istio.io/v1
+kind: VirtualService
+metadata:
+  name: ledger-vs
+  namespace: payments
+spec:
+  hosts:
+    - "ledger.dodo.local"
+  gateways:
+    - ledger-gateway
+  http:
+    - route:
+        - destination:
+            host: ledger-api.payments.svc.cluster.local
+            port:
+              number: 8080

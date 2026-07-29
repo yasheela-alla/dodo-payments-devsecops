@@ -1,0 +1,25 @@
+# Explicit allow keyed on WORKLOAD IDENTITY (SPIFFE / service account), not IP.
+# Only the 'reporting' SA and the ingress gateway may call ledger-api, and only
+# on the app port. Every other workload identity is denied by the default-deny
+# policy — including a pod that spoofs labels or IP, because identity is proven
+# by the mTLS client certificate, not by network position.
+apiVersion: security.istio.io/v1
+kind: AuthorizationPolicy
+metadata:
+  name: allow-reporting-to-ledger
+  namespace: payments
+spec:
+  selector:
+    matchLabels:
+      app: ledger-api
+  action: ALLOW
+  rules:
+    - from:
+        - source:
+            principals:
+              - "cluster.local/ns/payments/sa/reporting"
+              - "cluster.local/ns/istio-system/sa/istio-ingressgateway"
+      to:
+        - operation:
+            ports: ["8080"]
+            methods: ["GET", "POST"]

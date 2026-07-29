@@ -1,0 +1,10 @@
+# Zero-trust baseline: an AuthorizationPolicy with an empty spec denies ALL
+# requests in the namespace. Nothing is allowed until an explicit allow policy
+# grants it. This is the "default-deny" foundation.
+apiVersion: security.istio.io/v1
+kind: AuthorizationPolicy
+metadata:
+  name: allow-nothing
+  namespace: payments
+spec:
+  {}

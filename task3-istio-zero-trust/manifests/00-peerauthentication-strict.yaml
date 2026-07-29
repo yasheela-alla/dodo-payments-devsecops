@@ -1,0 +1,11 @@
+# mTLS STRICT for the whole payments namespace: every pod-to-pod call must be
+# mutually authenticated with Istio-issued certificates. Plaintext (non-mTLS)
+# traffic is refused at the sidecar — prove with `istioctl authn tls-check`.
+apiVersion: security.istio.io/v1
+kind: PeerAuthentication
+metadata:
+  name: default
+  namespace: payments
+spec:
+  mtls:
+    mode: STRICT

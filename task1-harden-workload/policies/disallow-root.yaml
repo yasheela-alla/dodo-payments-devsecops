@@ -7,9 +7,11 @@ metadata:
     policies.kyverno.io/category: Pod Security, PCI DSS
     policies.kyverno.io/severity: high
     policies.kyverno.io/description: >-
-      Containers must run as a non-root user with privilege escalation disabled
-      and all Linux capabilities dropped. Backstops PSS restricted for any
-      namespace that isn't labelled, and gives a clear, policy-named rejection.
+      Workload containers must run as non-root with privilege escalation
+      disabled and all Linux capabilities dropped. Platform/system namespaces
+      (CNI, ingress, mesh, controllers) are excluded — those components
+      legitimately need elevated host privileges and live outside the workload
+      trust boundary.
 spec:
   validationFailureAction: Enforce
   background: true
@@ -19,6 +21,18 @@ spec:
         any:
           - resources:
               kinds: ["Pod"]
+      exclude: &infra
+        any:
+          - resources:
+              namespaces:
+                - kube-system
+                - kube-public
+                - kube-node-lease
+                - istio-system
+                - kyverno
+                - argocd
+                - ingress-nginx
+                - local-path-storage
       validate:
         message: "Containers must set runAsNonRoot: true (no root)."
         pattern:
@@ -33,6 +47,7 @@ spec:
         any:
           - resources:
               kinds: ["Pod"]
+      exclude: *infra
       validate:
         message: "Containers must drop ALL capabilities."
         foreach:
@@ -48,6 +63,7 @@ spec:
         any:
           - resources:
               kinds: ["Pod"]
+      exclude: *infra
       validate:
         message: "allowPrivilegeEscalation must be false."
         pattern:

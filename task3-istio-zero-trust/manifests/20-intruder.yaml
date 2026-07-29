@@ -1,0 +1,50 @@
+# An in-mesh but UNAUTHORIZED workload used for the negative test. It has a
+# valid mTLS identity (its own SA) but is not in ledger-api's allow list, so the
+# default-deny policy blocks it — proving authz is by identity, not reachability.
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: intruder
+  namespace: payments
+automountServiceAccountToken: false
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: intruder
+  namespace: payments
+  labels:
+    app: intruder
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: intruder
+  template:
+    metadata:
+      labels:
+        app: intruder
+    spec:
+      serviceAccountName: intruder
+      automountServiceAccountToken: false
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 100
+        runAsGroup: 101
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: client
+          image: curlimages/curl:8.11.1
+          command: ["sleep", "infinity"]
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            runAsNonRoot: true
+            capabilities:
+              drop: ["ALL"]
+            seccompProfile:
+              type: RuntimeDefault
+          resources:
+            requests: {cpu: 10m, memory: 16Mi}
+            limits: {cpu: 50m, memory: 32Mi}

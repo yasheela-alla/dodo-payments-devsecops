@@ -1,0 +1,116 @@
+# Kubernetes NetworkPolicy — the L3/L4 defence-in-depth layer UNDER the Istio
+# mesh. Enforced by Calico. What each layer catches:
+#   * Istio AuthorizationPolicy (L7): identity-based, per-request, but only for
+#     traffic that goes THROUGH the sidecar. If a sidecar is bypassed/compromised
+#     or an attacker sends raw packets, L7 authz may not see it.
+#   * NetworkPolicy (L3/L4): enforced in the kernel/dataplane regardless of the
+#     mesh. Catches raw TCP, sidecar-bypass, and (critically) constrains EGRESS
+#     so a compromised ledger-api cannot reach the metadata endpoint or internal
+#     services — the compensating control for the /fetch SSRF residual risk.
+# ---------------------------------------------------------------------------
+# 1. Default-deny ALL ingress and egress in the namespace.
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: default-deny-all
+  namespace: payments
+spec:
+  podSelector: {}
+  policyTypes: [Ingress, Egress]
+---
+# 2. Allow DNS egress for every pod (needed for service resolution + the mesh).
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-dns-egress
+  namespace: payments
+spec:
+  podSelector: {}
+  policyTypes: [Egress]
+  egress:
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: kube-system
+      ports:
+        - {protocol: UDP, port: 53}
+        - {protocol: TCP, port: 53}
+---
+# 3. Allow the Istio control-plane traffic (sidecars <-> istiod) so mTLS works.
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-istiod-egress
+  namespace: payments
+spec:
+  podSelector: {}
+  policyTypes: [Egress]
+  egress:
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: istio-system
+      ports:
+        - {protocol: TCP, port: 15012}   # xDS / cert signing
+        - {protocol: TCP, port: 15010}
+---
+# 4. ledger-api INGRESS: only from reporting, ingress-nginx, and the istio
+#    ingress gateway, only on 8080. (Identity is still enforced at L7 by Istio;
+#    this bounds it at L4 too.)
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: ledger-api-ingress
+  namespace: payments
+spec:
+  podSelector:
+    matchLabels:
+      app: ledger-api
+  policyTypes: [Ingress]
+  ingress:
+    - from:
+        - podSelector:
+            matchLabels:
+              app: reporting
+        # 'intruder' is granted L4 reachability ON PURPOSE: it models an
+        # attacker who already has a foothold on an in-mesh pod with network
+        # access. The point of zero-trust is that network reachability is NOT
+        # authorization — Istio's identity-based AuthorizationPolicy still
+        # returns 403 for it. (Remove this to see NP block it at L4 instead.)
+        - podSelector:
+            matchLabels:
+              app: intruder
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: ingress-nginx
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: istio-system
+      ports:
+        - {protocol: TCP, port: 8080}
+        - {protocol: TCP, port: 15008}   # HBONE (mesh mTLS tunnel)
+---
+# 5. ledger-api EGRESS: DNS + istiod only (inherited from 2 & 3). It has NO
+#    allow-rule to any other destination, so it CANNOT reach 169.254.169.254,
+#    RFC1918 internal services, or the public internet — the SSRF blast radius
+#    is zero at the network layer even if the app-level check is bypassed.
+#    (If ledger-api ever needs a specific partner API, add a narrow egress rule
+#    to that CIDR/port here — never a blanket allow.)
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: reporting-to-ledger-egress
+  namespace: payments
+spec:
+  podSelector:
+    matchExpressions:
+      - {key: app, operator: In, values: ["reporting", "intruder"]}
+  policyTypes: [Egress]
+  egress:
+    - to:
+        - podSelector:
+            matchLabels:
+              app: ledger-api
+      ports:
+        - {protocol: TCP, port: 8080}
+        - {protocol: TCP, port: 15008}
