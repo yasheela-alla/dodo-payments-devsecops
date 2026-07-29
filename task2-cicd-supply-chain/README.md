@@ -20,8 +20,8 @@ Pipeline: [`.github/workflows/ci.yml`](../.github/workflows/ci.yml)
 **SARIF in the Security tab** (Trivy + Semgrep code-scanning alerts):
 ![GitHub code scanning](../docs/screenshots/github-code-scanning.png)
 
-**ArgoCD — GitOps source of truth (Healthy / Synced), full resource tree:**
-![ArgoCD resource tree](../docs/screenshots/argocd-tree.png)
+**ArgoCD — GitOps source of truth: `ledger-api` Healthy / Synced from the repo:**
+![ArgoCD application — Healthy/Synced](../docs/screenshots/argocd-apps.png)
 
 ```
  push ─▶ static-analysis ───────────────▶ build-sign-attest ───────────────▶ GitOps (ArgoCD)

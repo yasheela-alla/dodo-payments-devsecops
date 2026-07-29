@@ -12,7 +12,7 @@ are terminal-recording GIFs in [`../recordings/`](../recordings)).
 ## ArgoCD — GitOps (Task 2)
 | File | Shows |
 |------|-------|
-| `argocd-tree.png` | `ledger-api` application — **Healthy / Synced**, full resource tree (Deployment/Svc/SA/**SealedSecret**/Ingress/RBAC), pods 2/2 |
+| `argocd-apps.png` | `ledger-api` application card — **Status: ♥ Healthy ✓ Synced**, repo + `main` + path `task1-harden-workload/manifests` + ns `payments` |
 
 ## OrbStack — the local cluster is real (Task 1)
 | File | Shows |
