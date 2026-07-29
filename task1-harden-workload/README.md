@@ -19,6 +19,10 @@ kind nodes running as containers in OrbStack, and a kind node's boot log (arm64)
 ![OrbStack containers — kind nodes + vulntarget](../docs/screenshots/orbstack-containers.png)
 ![OrbStack — kind node boot logs](../docs/screenshots/orbstack-node-logs.png)
 
+Built images (hardened `0.1.0` + pentest target `:vuln`):
+
+![docker images ledger-api](../docs/recordings/images.gif)
+
 ---
 
 ## What was wrong in the starter

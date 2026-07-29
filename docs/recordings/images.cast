@@ -1,0 +1,4 @@
+{"version":3,"term":{"cols":80,"rows":24},"timestamp":1785331580,"command":"bash docs/recordings/rec-images.sh","env":{"SHELL":"/bin/zsh"}}
+[0.057, "o", "\u001b[1;36m### Built ledger-api images (hardened 0.1.0 + pentest target :vuln) ###\u001b[0m\r\n$ docker images | grep -E 'REPOSITORY|ledger-api'\r\n"]
+[0.491, "o", "REPOSITORY                                             TAG                      SIZE      CREATED\r\nledger-api                                             vuln                     195MB     5 hours ago\r\nledger-api                                             0.1.0                    230MB     6 hours ago\r\n"]
+[2.016, "x", "0"]

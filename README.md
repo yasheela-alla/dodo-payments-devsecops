@@ -83,9 +83,24 @@ flowchart TB
 ./task2-cicd-supply-chain/argocd/setup.sh && ./task2-cicd-supply-chain/drift-demo.sh
 ```
 
+…or use the **[`Makefile`](Makefile)** for one-command UX:
+
+```bash
+make bootstrap     # full stack        make verify    # all verification suites
+make demo-canary   # canary 90/10→50/50  make demo-drift  # ArgoCD self-heal
+make pentest       # run the vuln target  make retest    # prove findings closed
+make clean         # tear it all down
+```
+
 **Tooling:** kind, kubectl, helm, docker, Calico, Istio (+CNI), Kyverno,
 Sealed Secrets, ArgoCD, cosign, trivy, gitleaks, semgrep. Cluster config:
 [`task1-harden-workload/cluster/kind-config.yaml`](task1-harden-workload/cluster/kind-config.yaml).
+
+## Security artifacts (defender's view)
+
+- 🧭 **[Threat model (STRIDE)](docs/THREAT-MODEL.md)** — threats → controls → residual risk for the CDE
+- 📋 **[PCI DSS v4.0 control mapping](docs/PCI-DSS-MAPPING.md)** — audit-ready control ↔ requirement matrix
+- 🗺️ **[Evidence & requirements traceability](#evidence--requirements-traceability)** — verify every requirement in 2 minutes (below)
 
 ---
 
@@ -123,3 +138,49 @@ captured in each task's `PROOF.txt` / `evidence/`. The GitHub-hosted proofs are 
 - **Pentest report** also as [HTML](task4-recon-pentest/report/Dodo-Payments-Security-Assessment.html) / [PDF](task4-recon-pentest/report/Dodo-Payments-Security-Assessment.pdf)
 - **Terminal recordings (GIFs)** of every live demo: [`docs/recordings/`](docs/recordings) — hardening, zero-trust, supply-chain, pentest+retest
 - **UI screenshots** (GitHub Actions/Security, ArgoCD, OrbStack): [`docs/screenshots/`](docs/screenshots)
+
+---
+
+## Evidence & requirements traceability
+
+Every item the brief asks for, and exactly where it's proven:
+
+| Task | Requirement | Proven by |
+|------|-------------|-----------|
+| 1 | neighbour + Deploy/Svc/ConfigMap/Ingress | [`task1/manifests/`](task1-harden-workload/manifests) |
+| 1 | non-root · read-only · drop-ALL · seccomp | `task1` `PROOF.txt` · [demo GIF](docs/recordings/task1-hardening.gif) |
+| 1 | resources + probes on every container | [`30-deployment.yaml`](task1-harden-workload/manifests/30-deployment.yaml) |
+| 1 | least-priv SA (no default) + RBAC | [`20-serviceaccount.yaml`](task1-harden-workload/manifests/20-serviceaccount.yaml) · `RBAC-MATRIX.txt` |
+| 1 | secrets out of git (Sealed Secrets) | [`40-sealed-secret.yaml`](task1-harden-workload/manifests/40-sealed-secret.yaml) |
+| 1 | Kyverno reject root/`:latest`/unsigned | [`policies/`](task1-harden-workload/policies) · `REJECTION-OUTPUT.txt` |
+| 1 · bonus | persona RBAC · PSS restricted · reject original | `rbac-personas/` · `00-namespace.yaml` · `insecure-original/` |
+| 2 | GH Actions build/scan/sign/deploy | [`ci.yml`](.github/workflows/ci.yml) · [run](https://github.com/yasheela-alla/dodo-payments-devsecops/actions) |
+| 2 | Semgrep · Trivy · image-scan · gitleaks | `scan-evidence/` + Security tab SARIF |
+| 2 | cosign keyless + SLSA + fail policy | `proof/cosign-verify.txt` · [Task 2 README](task2-cicd-supply-chain) |
+| 2 | ArgoCD GitOps drift + self-heal | `argocd/DRIFT-SELFHEAL-PROOF.txt` |
+| 2 · bonus | SARIF · `cosign verify` · canary | Security tab · `proof/` · `canary/CANARY-PROOF.txt` |
+| 3 | Istio mTLS STRICT + plaintext refused | `task3` `PROOF.txt` · [demo GIF](docs/recordings/task3-zerotrust.gif) |
+| 3 | default-deny authz by identity (allow/deny) | reporting=200 / intruder=403 in `PROOF.txt` |
+| 3 | cert issuance/rotation + trust root explained | [Task 3 README](task3-istio-zero-trust) |
+| 3 | NetworkPolicy + layer explanation | [`30-networkpolicy.yaml`](task3-istio-zero-trust/manifests/30-networkpolicy.yaml) |
+| 3 · bonus | ingress gateway TLS · canary · CDE tie-in | `gateway/` · `canary/` · Task 3 + PCI mapping |
+| 4A | passive recon (CT/DNS/TLS/banners) | [`recon/`](task4-recon-pentest/recon) + report §3 |
+| 4B | OWASP pentest, CVSS, PoC, remediation | [report](task4-recon-pentest/report/Dodo-Payments-Security-Assessment.md) + `pentest/evidence/` |
+| 4 · bonus | chain findings · retest · map to defences | report §5–§7 · [retest GIF](docs/recordings/pentest.gif) |
+| extra | threat model · PCI mapping · Makefile | [`THREAT-MODEL.md`](docs/THREAT-MODEL.md) · [`PCI-DSS-MAPPING.md`](docs/PCI-DSS-MAPPING.md) · [`Makefile`](Makefile) |
+
+## What I'd do with more time (production roadmap)
+
+Everything above runs and is proven; these are the next steps to take it from a
+faithful local demo to production:
+- **Secrets:** External Secrets + Vault (or SOPS+age with an ArgoCD decryptor) and
+  KMS **encryption-at-rest** for etcd — beyond "no plaintext in git."
+- **Supply chain:** enforce **signed git commits** + branch protection; pin every
+  base image by digest; add `grype` as a second scanner and a VEX feed to suppress
+  non-exploitable CVEs precisely.
+- **Runtime:** **Falco** for runtime threat detection; gVisor/Kata for stronger
+  isolation of the CDE; an Istio local-rate-limit + HPA for DoS resilience.
+- **Observability/audit:** enable K8s **API audit logging** → SIEM; Prometheus/Grafana
+  SLOs; alert on Kyverno denials and mTLS failures.
+- **Mesh:** chain istiod to a `cert-manager` intermediate CA (real trust root);
+  progressive delivery via Argo Rollouts with automated canary analysis.
