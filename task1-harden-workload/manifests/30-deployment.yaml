@@ -29,7 +29,7 @@ spec:
         - name: ledger-api
           # Pinned tag (never :latest) so Kyverno's disallow-latest passes and
           # the deployed artifact is immutable. CI overwrites this with a digest.
-          image: ledger-api:0.1.0
+          image: ghcr.io/yasheela-alla/ledger-api@sha256:d642d2af4eaa5e7c2246fdf31a20f9a4be55241732b3cca1563bc6b58a47992a
           imagePullPolicy: IfNotPresent
           ports:
             - name: http
