@@ -1,0 +1,18 @@
+namespace/canary-demo created
+deployment.apps/echo-v1 created
+deployment.apps/echo-v2 created
+service/echo created
+destinationrule.networking.istio.io/echo created
+virtualservice.networking.istio.io/echo created
+Waiting for deployment "echo-v1" rollout to finish: 0 of 1 updated replicas are available...
+deployment "echo-v1" successfully rolled out
+deployment "echo-v2" successfully rolled out
+=== 90/10 split — 50 requests ===
+  36 SERVED-BY v1
+   3 SERVED-BY v2
+
+=== shift to 50/50 (progress the canary) ===
+virtualservice.networking.istio.io/echo patched
+=== 50/50 split — 50 requests ===
+  28 SERVED-BY v1
+  20 SERVED-BY v2

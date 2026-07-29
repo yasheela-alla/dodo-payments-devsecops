@@ -1,0 +1,84 @@
+# Runnable canary demo (self-contained namespace so it never races with the
+# ArgoCD-managed payments workload). Two subsets v1/v2 behind one Service; the
+# DestinationRule defines the subsets and the VirtualService splits traffic by
+# WEIGHT — the exact mechanism used for a real ledger-api v1→v2 canary
+# (see 50-canary.yaml for the production objects). http-echo stands in for the
+# app so each subset is distinguishable in the response body; it runs fully
+# PSS-restricted (non-root, read-only, caps dropped, seccomp).
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: canary-demo
+  labels:
+    istio-injection: enabled
+    pod-security.kubernetes.io/enforce: restricted
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata: {name: echo-v1, namespace: canary-demo, labels: {app: echo, version: v1}}
+spec:
+  replicas: 1
+  selector: {matchLabels: {app: echo, version: v1}}
+  template:
+    metadata: {labels: {app: echo, version: v1}}
+    spec:
+      securityContext: {runAsNonRoot: true, runAsUser: 65532, seccompProfile: {type: RuntimeDefault}}
+      containers:
+        - name: echo
+          image: hashicorp/http-echo:1.0.0
+          args: ["-listen=:8080", "-text=SERVED-BY v1"]
+          ports: [{containerPort: 8080}]
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities: {drop: ["ALL"]}
+          resources: {requests: {cpu: 10m, memory: 16Mi}, limits: {cpu: 50m, memory: 32Mi}}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata: {name: echo-v2, namespace: canary-demo, labels: {app: echo, version: v2}}
+spec:
+  replicas: 1
+  selector: {matchLabels: {app: echo, version: v2}}
+  template:
+    metadata: {labels: {app: echo, version: v2}}
+    spec:
+      securityContext: {runAsNonRoot: true, runAsUser: 65532, seccompProfile: {type: RuntimeDefault}}
+      containers:
+        - name: echo
+          image: hashicorp/http-echo:1.0.0
+          args: ["-listen=:8080", "-text=SERVED-BY v2"]
+          ports: [{containerPort: 8080}]
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities: {drop: ["ALL"]}
+          resources: {requests: {cpu: 10m, memory: 16Mi}, limits: {cpu: 50m, memory: 32Mi}}
+---
+apiVersion: v1
+kind: Service
+metadata: {name: echo, namespace: canary-demo, labels: {app: echo}}
+spec:
+  selector: {app: echo}          # fronts BOTH subsets
+  ports: [{name: http, port: 8080, targetPort: 8080}]
+---
+apiVersion: networking.istio.io/v1
+kind: DestinationRule
+metadata: {name: echo, namespace: canary-demo}
+spec:
+  host: echo.canary-demo.svc.cluster.local
+  subsets:
+    - {name: v1, labels: {version: v1}}
+    - {name: v2, labels: {version: v2}}
+---
+apiVersion: networking.istio.io/v1
+kind: VirtualService
+metadata: {name: echo, namespace: canary-demo}
+spec:
+  hosts: ["echo.canary-demo.svc.cluster.local"]
+  http:
+    - route:
+        - destination: {host: echo.canary-demo.svc.cluster.local, subset: v1}
+          weight: 90
+        - destination: {host: echo.canary-demo.svc.cluster.local, subset: v2}
+          weight: 10
