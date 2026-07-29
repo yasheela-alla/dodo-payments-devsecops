@@ -20,7 +20,6 @@ are terminal-recording GIFs in [`../recordings/`](../recordings)).
 | `orbstack-containers.png` | Containers: `dodo-control-plane` + 2 workers (kind nodes) + `vulntarget` running |
 | `orbstack-node-logs.png` | kind node boot log — detects docker/arm64, Debian trixie, starts kubelet |
 
-> **Deliberately not included:** the OrbStack *Images* panel screenshot — it
-> showed an unrelated internal (employer) ECR image and account ID, which has no
-> place in a public repo. The built `ledger-api` images are instead shown,
-> filtered, in the [`live-stack` recording](../recordings/live-stack.gif).
+> The built `ledger-api` images (hardened `0.1.0` + pentest `:vuln`) are shown in
+> the [`docker images` GIF](../recordings/images.gif) and the
+> [`live-stack` recording](../recordings/live-stack.gif).
