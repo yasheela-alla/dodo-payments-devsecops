@@ -8,6 +8,10 @@ the insecure version impossible to deploy again.
 > [Task 4](../task4-recon-pentest) for the before/after). Task 1 is about the
 > *workload / platform* controls below.
 
+## 🎬 Demo (terminal recording)
+
+![Task 1 — hardened securityContext, least-priv RBAC, and admission rejecting the insecure Deployment](../docs/recordings/task1-hardening.gif)
+
 ---
 
 ## What was wrong in the starter

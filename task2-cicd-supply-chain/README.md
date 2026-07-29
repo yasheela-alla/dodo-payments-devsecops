@@ -8,6 +8,10 @@ self-heal.
 
 Pipeline: [`.github/workflows/ci.yml`](../.github/workflows/ci.yml)
 
+## 🎬 Demo (terminal recording) — signed image runs, unsigned rejected
+
+![Supply chain — signed GHCR image deployed, Kyverno verifies signature at admission (pass), unsigned image rejected](../docs/recordings/supplychain.gif)
+
 ```
  push ─▶ static-analysis ───────────────▶ build-sign-attest ───────────────▶ GitOps (ArgoCD)
          ├─ gitleaks   (secrets)          ├─ docker build (load, no push)      ├─ auto-sync

@@ -121,3 +121,4 @@ captured in each task's `PROOF.txt` / `evidence/`. The GitHub-hosted proofs are 
 - **Closed supply-chain loop** — CI signs → promotes digest to git → ArgoCD deploys → **Kyverno verifies the signature at admission** (unsigned rejected): [`task2-cicd-supply-chain/proof/SIGNED-IMAGE-ADMISSION-PROOF.txt`](task2-cicd-supply-chain/proof/SIGNED-IMAGE-ADMISSION-PROOF.txt)
 - **Live canary** (VirtualService/DestinationRule weighted routing, 90/10→50/50): [`task3-istio-zero-trust/canary/CANARY-PROOF.txt`](task3-istio-zero-trust/canary/CANARY-PROOF.txt)
 - **Pentest report** also as [HTML](task4-recon-pentest/report/Dodo-Payments-Security-Assessment.html) / [PDF](task4-recon-pentest/report/Dodo-Payments-Security-Assessment.pdf)
+- **Terminal recordings (GIFs)** of every live demo: [`docs/recordings/`](docs/recordings) — hardening, zero-trust, supply-chain, pentest+retest

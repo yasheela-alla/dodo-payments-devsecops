@@ -1,0 +1,13 @@
+{"version":3,"term":{"cols":80,"rows":24},"timestamp":1785319798,"command":"bash docs/recordings/rec-supplychain.sh","env":{"SHELL":"/bin/zsh"}}
+[0.039, "o", "\r\n\u001b[1;36m### Signed image is what runs (CI promoted the digest -> ArgoCD deployed it) ###\u001b[0m\r\n"]
+[1.135, "o", "ghcr.io/yasheela-alla/ledger-api@sha256:d642d2af4eaa5e7c2246fdf31a20f9a4be55241732b3cca1563bc6b58a47992a"]
+[0.002, "o", "\r\n"]
+[1.011, "o", "\r\n"]
+[0.000, "o", "\u001b[1;36m### Kyverno VERIFIED the cosign signature at admission (positive) ###\u001b[0m\r\n"]
+[1.168, "o", "\u001b[1;32m{\"ghcr.io/yasheela-alla/ledger-api@sha256:d642d2af4eaa5e7c2246fdf31a20f9a4be55241732b3cca1563bc6b58a47992a\":\"pass\"}\u001b[0m"]
+[0.000, "o", "\r\n"]
+[2.014, "o", "\r\n"]
+[0.000, "o", "\u001b[1;36m### Unsigned image is REJECTED at admission (negative control) ###\u001b[0m\r\n"]
+[5.225, "o", "\u001b[1;31mresource Pod/payments/unsigned-test was blocked due to the following policies \u001b[0m\r\n\u001b[1;31mrequire-signed-images:\u001b[0m\r\n\u001b[1;31m    .attestors[0].entries[0].keyless: no signatures found'\u001b[0m\r\n"]
+[0.127, "o", "\u001b[1;32m=> only images signed by our workflow can run\u001b[0m\r\n"]
+[2.014, "x", "0"]

@@ -1,0 +1,11 @@
+{"version":3,"term":{"cols":80,"rows":24},"timestamp":1785319753,"command":"bash docs/recordings/rec-task1-hardening.sh","env":{"SHELL":"/bin/zsh"}}
+[0.047, "o", "\r\n\u001b[1;36m### TASK 1 — hardened securityContext (live pod) ###\u001b[0m\r\n"]
+[1.246, "o", "{\r\n    \u001b[1m\"allowPrivilegeEscalation\"\u001b[0m: \u001b[1;34mfalse\u001b[0m,\r\n    \u001b[1m\"capabilities\"\u001b[0m: {\r\n        \u001b[1m\"drop\"\u001b[0m: [\r\n            \u001b[32m\"ALL\"\u001b[0m\r\n        ]\r\n    },\r\n    \u001b[1m\"privileged\"\u001b[0m: \u001b[1;34mfalse\u001b[0m,\r\n    \u001b[1m\"readOnlyRootFilesystem\"\u001b[0m: \u001b[1;34mtrue\u001b[0m,\r\n    \u001b[1m\"runAsNonRoot\"\u001b[0m: \u001b[1;34mtrue\u001b[0m,\r\n    \u001b[1m\"runAsUser\"\u001b[0m: \u001b[33m10001\u001b[0m,\r\n    \u001b[1m\"seccompProfile\"\u001b[0m: {\r\n        \u001b[1m\"type\"\u001b[0m: \u001b[32m\"RuntimeDefault\"\u001b[0m\r\n    }\r\n}\r\n"]
+[2.019, "o", "\r\n\u001b[1;36m### Least privilege: can workloads read Secrets? ###\u001b[0m\r\n"]
+[1.147, "o", "ledger-api SA -> get secrets : \u001b[1;31mno\u001b[0m\r\n"]
+[0.056, "o", "reporting  SA -> get secrets : \u001b[1;31mno\u001b[0m\r\n"]
+[0.048, "o", "reporting  SA -> list svcs   : \u001b[1;32myes\u001b[0m\r\n"]
+[2.012, "o", "\r\n\u001b[1;36m### Admission REJECTS the original insecure Deployment (PSS + Kyverno) ###\u001b[0m\r\n"]
+[1.244, "o", "Warning: would violate PodSecurity \"restricted:latest\": allowPrivilegeEscalation != false (container \"ledger-api-insecure\" must set securityContext.allowPrivilegeEscalation=false), unrestricted capabilities (container \"ledger-api-insecure\" must set securityContext.capabilities.drop=[\"ALL\"]), runAsNonRoot != true (pod or container \"ledger-api-insecure\" must set securityContext.runAsNonRoot=true), seccompProfile (pod or container \"ledger-api-insecure\" must set securityContext.seccompProfile.type to \"RuntimeDefault\" or \"Localhost\")\r\nError from server: error when creating \"STDIN\": admission webhook \"validate.kyverno.svc-fail\" denied the request: \r\nresource Deployment/payments/ledger-api-insecure was blocked due to the following policies \r\ndisallow-run-as-root:\r\n"]
+[0.001, "o", "\u001b[1;32m=> insecure workload blocked before scheduling\u001b[0m\r\n"]
+[2.014, "x", "0"]

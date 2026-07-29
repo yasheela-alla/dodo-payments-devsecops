@@ -20,4 +20,6 @@ paths = [
   # the RCE chain "exfiltrates" to illustrate impact. Not a real key.
   '''task4-recon-pentest/pentest/evidence/.*''',
   '''task4-recon-pentest/report/.*''',
+  # terminal recordings (.cast/.gif) capture the same fake PoC value as output
+  '''docs/recordings/.*''',
 ]

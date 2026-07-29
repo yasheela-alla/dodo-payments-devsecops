@@ -11,6 +11,10 @@ Kubernetes NetworkPolicy layer underneath for defence-in-depth.
 > The cluster runs **Calico** (kind's default kindnet does not enforce
 > NetworkPolicy) so the L3/L4 layer genuinely enforces.
 
+## 🎬 Demo (terminal recording)
+
+![Task 3 — mTLS STRICT, identity-based authz (200 vs 403), NetworkPolicy egress containment](../docs/recordings/task3-zerotrust.gif)
+
 ## Layout
 ```
 task3-istio-zero-trust/

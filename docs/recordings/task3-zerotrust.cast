@@ -1,0 +1,12 @@
+{"version":3,"term":{"cols":80,"rows":24},"timestamp":1785319781,"command":"bash docs/recordings/rec-task3-zerotrust.sh","env":{"SHELL":"/bin/zsh"}}
+[0.296, "o", "\r\n\u001b[1;36m### TASK 3 — mTLS STRICT (Istio) ###\u001b[0m\r\n"]
+[1.095, "o", "NAME      MODE     AGE\r\ndefault   STRICT   102m\r\n"]
+[0.779, "o", "\u001b[1;32m   Workload mTLS mode: STRICT\u001b[0m\r\n"]
+[2.013, "o", "\r\n\u001b[1;36m### Identity-based AuthorizationPolicy (default-deny + allow by SPIFFE) ###\u001b[0m\r\n"]
+[2.149, "o", "reporting SA (authorized) -> /health : \u001b[1;32m200\u001b[0m\r\n"]
+[0.340, "o", "intruder  SA (unauthorized)-> /health : \u001b[1;31m403\u001b[0m  (403 = denied by identity)\r\n"]
+[2.018, "o", "\r\n"]
+[0.000, "o", "\u001b[1;36m### NetworkPolicy egress containment — SSRF blast-radius = 0 ###\u001b[0m\r\n"]
+[1.016, "o", "ledger-api -> 169.254.169.254 (cloud metadata): "]
+[5.124, "o", "\u001b[1;31mBLOCKED (TimeoutError)\u001b[0m\r\n"]
+[2.053, "x", "0"]
