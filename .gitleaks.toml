@@ -1,0 +1,26 @@
+# gitleaks config — extends the default rules and documents the ONLY accepted
+# exceptions. Every entry is either encrypted-by-design or an intentional
+# demo/PoC value; no real secret is allow-listed. This is the "triage, don't
+# hide" posture: the CI secret-scan gate stays hard-blocking for everything else.
+[extend]
+useDefault = true
+
+[allowlist]
+description = "Documented, reviewed exceptions only"
+paths = [
+  # SealedSecret: values are ASYMMETRICALLY ENCRYPTED (Bitnami). Only the
+  # in-cluster controller can decrypt them; committing ciphertext is the point.
+  '''task1-harden-workload/manifests/40-sealed-secret.yaml''',
+  # Intentional INSECURE sample used to demonstrate admission rejection. Its
+  # sk_live_/password are the starter's placeholder values, not real.
+  '''task1-harden-workload/insecure-original/.*''',
+  # Pentest PoC evidence + report: contains a FAKE sk_live_ example value that
+  # the RCE chain "exfiltrates" to illustrate impact. Not a real key.
+  '''task4-recon-pentest/pentest/evidence/.*''',
+  '''task4-recon-pentest/report/.*''',
+]
+regexes = [
+  # Belt-and-suspenders: the specific fake demo/PoC tokens.
+  '''sk_live_[REDACTED-DEMO-KEY]''',
+  '''sk_live_[REDACTED-FAKE-POC-KEY]''',
+]
