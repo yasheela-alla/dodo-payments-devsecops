@@ -11,9 +11,6 @@ __pycache__/
 *.log
 *.swp
 
-# recon raw output can be large; keep curated results, ignore scratch
-task4-recon-pentest/recon/raw/
-
 # never commit plaintext secrets
 *secret*.plain.yaml
 *.dec.yaml
