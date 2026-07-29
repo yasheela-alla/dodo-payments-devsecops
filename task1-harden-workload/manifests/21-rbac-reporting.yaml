@@ -1,0 +1,42 @@
+# The neighbour "reporting" service discovers ledger-api via the Kubernetes API
+# and reads its (non-secret) ConfigMap. That is ALL it may do — a tightly scoped
+# namespaced Role, never ClusterRole, never secrets, never write verbs.
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: reporting
+  namespace: payments
+  labels:
+    app: reporting
+automountServiceAccountToken: true
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: reporting-read
+  namespace: payments
+rules:
+  # Service discovery for ledger-api.
+  - apiGroups: [""]
+    resources: ["services", "endpoints"]
+    verbs: ["get", "list"]
+  # Read only the ledger-api ConfigMap by name. NOTE: secrets are deliberately
+  # absent — a compromised reporting pod cannot read STRIPE_API_KEY / DB creds.
+  - apiGroups: [""]
+    resources: ["configmaps"]
+    resourceNames: ["ledger-api-config"]
+    verbs: ["get"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: reporting-read
+  namespace: payments
+subjects:
+  - kind: ServiceAccount
+    name: reporting
+    namespace: payments
+roleRef:
+  kind: Role
+  name: reporting-read
+  apiGroup: rbac.authorization.k8s.io

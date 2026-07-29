@@ -1,0 +1,8 @@
+action                   dev    operator  admin 
+----------------         ---    --------  ----- 
+get pods                 yes    yes       yes   
+read logs                yes    yes       yes   
+delete pods              no     yes       yes   
+scale/patch deploy       no     yes       yes   
+READ SECRETS             no     no        yes   
+modify RBAC              no     no        yes   

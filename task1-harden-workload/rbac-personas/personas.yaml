@@ -1,0 +1,101 @@
+# Least-privilege RBAC for three human personas, scoped to the payments (CDE)
+# namespace. Roles are namespaced (never ClusterRole) so blast radius is one ns.
+# Bound to groups so membership is managed by the IdP, not per-user bindings.
+#
+#   developer -> read-only observability, NO secrets, NO writes
+#   operator  -> manage workloads (scale/restart/rollout), NO secret values
+#   admin     -> full control of the namespace incl. secrets + RBAC
+# ---------------------------------------------------------------------------
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: persona-developer
+  namespace: payments
+rules:
+  - apiGroups: [""]
+    resources: ["pods", "pods/log", "services", "configmaps", "events", "endpoints"]
+    verbs: ["get", "list", "watch"]
+  - apiGroups: ["apps"]
+    resources: ["deployments", "replicasets"]
+    verbs: ["get", "list", "watch"]
+  # Debugging convenience — port-forward to a pod, but not exec/attach.
+  - apiGroups: [""]
+    resources: ["pods/portforward"]
+    verbs: ["create"]
+  # NOTE: secrets are intentionally absent.
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: persona-operator
+  namespace: payments
+rules:
+  # Everything a developer can see...
+  - apiGroups: [""]
+    resources: ["pods", "pods/log", "services", "configmaps", "events", "endpoints"]
+    verbs: ["get", "list", "watch"]
+  # ...plus manage workloads: scale, rollout restart, delete pods to recycle.
+  - apiGroups: ["apps"]
+    resources: ["deployments", "replicasets", "statefulsets"]
+    verbs: ["get", "list", "watch", "update", "patch"]
+  - apiGroups: ["apps"]
+    resources: ["deployments/scale"]
+    verbs: ["update", "patch"]
+  - apiGroups: [""]
+    resources: ["pods"]
+    verbs: ["delete"]
+  # NOTE: operators manage the app but cannot read raw secret material — those
+  # are delivered via SealedSecrets/GitOps, not by humans copying values around.
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: persona-admin
+  namespace: payments
+rules:
+  - apiGroups: ["*"]
+    resources: ["*"]
+    verbs: ["*"]
+---
+# --- bindings to IdP-managed groups ----------------------------------------
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: developers
+  namespace: payments
+subjects:
+  - kind: Group
+    name: "dodo:developers"
+    apiGroup: rbac.authorization.k8s.io
+roleRef:
+  kind: Role
+  name: persona-developer
+  apiGroup: rbac.authorization.k8s.io
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: operators
+  namespace: payments
+subjects:
+  - kind: Group
+    name: "dodo:operators"
+    apiGroup: rbac.authorization.k8s.io
+roleRef:
+  kind: Role
+  name: persona-operator
+  apiGroup: rbac.authorization.k8s.io
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: admins
+  namespace: payments
+subjects:
+  - kind: Group
+    name: "dodo:admins"
+    apiGroup: rbac.authorization.k8s.io
+roleRef:
+  kind: Role
+  name: persona-admin
+  apiGroup: rbac.authorization.k8s.io

@@ -1,0 +1,52 @@
+
+=== pods ===
+NAME                         READY   STATUS    RESTARTS   AGE     IP           NODE           NOMINATED NODE   READINESS GATES
+ledger-api-9655dbf69-ft7nb   1/1     Running   0          4m18s   10.244.2.6   dodo-worker    <none>           <none>
+ledger-api-9655dbf69-nd8sk   1/1     Running   0          4m18s   10.244.1.7   dodo-worker2   <none>           <none>
+reporting-fff68f985-th8wn    1/1     Running   0          4m18s   10.244.1.6   dodo-worker2   <none>           <none>
+
+=== container securityContext (ledger-api) ===
+{
+    "allowPrivilegeEscalation": false,
+    "capabilities": {
+        "drop": [
+            "ALL"
+        ]
+    },
+    "privileged": false,
+    "readOnlyRootFilesystem": true,
+    "runAsNonRoot": true,
+    "runAsUser": 10001,
+    "seccompProfile": {
+        "type": "RuntimeDefault"
+    }
+}
+
+=== ServiceAccount token NOT mounted ===
+false
+
+=== secret comes from SealedSecret (no inline values) ===
+NAME                                          AGE
+sealedsecret.bitnami.com/ledger-api-secrets   4m18s
+
+NAME                        TYPE     DATA   AGE
+secret/ledger-api-secrets   Opaque   4      4m18s
+STRIPE_API_KEY=ledger-api-secrets
+DB_PASSWORD=ledger-api-secrets
+LEDGER_API_TOKEN=ledger-api-secrets
+TOKEN_SALT=ledger-api-secrets
+
+=== RBAC least privilege ===
+ledger-api can get secrets: no
+reporting  can get secrets: no
+reporting  can list svcs  : yes
+
+=== API auth + PAN masking ===
+/transactions no-token HTTP: 401
+(supply LEDGER_API_TOKEN to see masked PANs: 424242******4242)
+
+=== Kyverno policies (Enforce) ===
+NAME                    ADMISSION   BACKGROUND   READY   AGE     MESSAGE
+disallow-latest-tag     true        true         True    4m21s   Ready
+disallow-run-as-root    true        true         True    4m21s   Ready
+require-signed-images   true        false        True    4m21s   Ready

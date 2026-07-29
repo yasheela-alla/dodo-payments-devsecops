@@ -1,0 +1,35 @@
+apiVersion: kyverno.io/v1
+kind: ClusterPolicy
+metadata:
+  name: require-signed-images
+  annotations:
+    policies.kyverno.io/title: Require cosign-signed images (keyless)
+    policies.kyverno.io/category: Supply Chain, SLSA
+    policies.kyverno.io/severity: high
+    policies.kyverno.io/description: >-
+      Any ghcr.io/<owner>/ledger-api image must carry a valid cosign keyless
+      signature produced by THIS repo's GitHub Actions workflow (verified via
+      the Fulcio root and the workflow's OIDC identity). Unsigned or
+      foreign-signed images are rejected. Local dev images (bare 'ledger-api:*')
+      are out of scope so the kind demo still runs; production pulls are gated.
+spec:
+  validationFailureAction: Enforce
+  background: false
+  webhookTimeoutSeconds: 30
+  rules:
+    - name: verify-ghcr-ledger-api
+      match:
+        any:
+          - resources:
+              kinds: ["Pod"]
+      verifyImages:
+        - imageReferences:
+            - "ghcr.io/yasheela-gp/ledger-api*"
+          attestors:
+            - count: 1
+              entries:
+                - keyless:
+                    subject: "https://github.com/yasheela-gp/dodo-payments-devsecops/.github/workflows/*"
+                    issuer: "https://token.actions.githubusercontent.com"
+                    rekor:
+                      url: https://rekor.sigstore.dev

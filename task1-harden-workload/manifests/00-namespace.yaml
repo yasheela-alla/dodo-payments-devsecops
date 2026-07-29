@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: payments
+  labels:
+    # Pod Security Standards: enforce the strictest profile at the namespace.
+    # The original insecure Deployment (root, no securityContext) is rejected
+    # by the admission webhook before Kyverno even sees it — defence in depth.
+    pod-security.kubernetes.io/enforce: restricted
+    pod-security.kubernetes.io/enforce-version: latest
+    pod-security.kubernetes.io/audit: restricted
+    pod-security.kubernetes.io/warn: restricted
+    # Marks this namespace as part of the PCI cardholder-data environment.
+    dodo.payments/pci-scope: cde

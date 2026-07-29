@@ -1,0 +1,102 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ledger-api
+  namespace: payments
+  labels:
+    app: ledger-api
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: ledger-api
+  template:
+    metadata:
+      labels:
+        app: ledger-api
+    spec:
+      serviceAccountName: ledger-api
+      automountServiceAccountToken: false
+      # Pod-level security context — non-root, RuntimeDefault seccomp.
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 10001
+        runAsGroup: 10001
+        fsGroup: 10001
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: ledger-api
+          # Pinned tag (never :latest) so Kyverno's disallow-latest passes and
+          # the deployed artifact is immutable. CI overwrites this with a digest.
+          image: ledger-api:0.1.0
+          imagePullPolicy: IfNotPresent
+          ports:
+            - name: http
+              containerPort: 8080
+          # Container-level securityContext: the full lockdown.
+          securityContext:
+            allowPrivilegeEscalation: false
+            privileged: false
+            readOnlyRootFilesystem: true
+            runAsNonRoot: true
+            runAsUser: 10001
+            capabilities:
+              drop: ["ALL"]
+            seccompProfile:
+              type: RuntimeDefault
+          envFrom:
+            - configMapRef:
+                name: ledger-api-config
+          env:
+            # Secrets come from the SealedSecret-derived Secret, never inline.
+            - name: STRIPE_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: ledger-api-secrets
+                  key: STRIPE_API_KEY
+            - name: DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: ledger-api-secrets
+                  key: DB_PASSWORD
+            - name: LEDGER_API_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: ledger-api-secrets
+                  key: LEDGER_API_TOKEN
+            - name: TOKEN_SALT
+              valueFrom:
+                secretKeyRef:
+                  name: ledger-api-secrets
+                  key: TOKEN_SALT
+          resources:
+            requests:
+              cpu: 50m
+              memory: 64Mi
+            limits:
+              cpu: 250m
+              memory: 128Mi
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: http
+            initialDelaySeconds: 5
+            periodSeconds: 10
+            timeoutSeconds: 2
+            failureThreshold: 3
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: http
+            initialDelaySeconds: 3
+            periodSeconds: 5
+            timeoutSeconds: 2
+            failureThreshold: 3
+          volumeMounts:
+            # read-only root FS: gunicorn needs a writable tmp for worker heartbeats.
+            - name: tmp
+              mountPath: /tmp
+      volumes:
+        - name: tmp
+          emptyDir: {}

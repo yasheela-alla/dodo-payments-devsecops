@@ -1,0 +1,38 @@
+apiVersion: kyverno.io/v1
+kind: ClusterPolicy
+metadata:
+  name: disallow-latest-tag
+  annotations:
+    policies.kyverno.io/title: Disallow latest / untagged images
+    policies.kyverno.io/category: Supply Chain
+    policies.kyverno.io/severity: medium
+    policies.kyverno.io/description: >-
+      Images must carry an explicit, immutable tag. ':latest' and untagged
+      references are rejected because they make the deployed artifact
+      non-reproducible and defeat provenance verification.
+spec:
+  validationFailureAction: Enforce
+  background: true
+  rules:
+    - name: require-image-tag
+      match:
+        any:
+          - resources:
+              kinds: ["Pod"]
+      validate:
+        message: "An image tag is required (untagged images are not allowed)."
+        pattern:
+          spec:
+            containers:
+              - image: "*:*"
+    - name: forbid-latest-tag
+      match:
+        any:
+          - resources:
+              kinds: ["Pod"]
+      validate:
+        message: "Using ':latest' is not allowed; pin an immutable tag or digest."
+        pattern:
+          spec:
+            containers:
+              - image: "!*:latest"

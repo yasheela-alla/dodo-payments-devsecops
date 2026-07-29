@@ -1,0 +1,9 @@
+Warning: would violate PodSecurity "restricted:latest": allowPrivilegeEscalation != false (container "ledger-api-insecure" must set securityContext.allowPrivilegeEscalation=false), unrestricted capabilities (container "ledger-api-insecure" must set securityContext.capabilities.drop=["ALL"]), runAsNonRoot != true (pod or container "ledger-api-insecure" must set securityContext.runAsNonRoot=true), seccompProfile (pod or container "ledger-api-insecure" must set securityContext.seccompProfile.type to "RuntimeDefault" or "Localhost")
+Error from server: error when creating "/tmp/insecure-clean.yaml": admission webhook "validate.kyverno.svc-fail" denied the request: 
+
+resource Deployment/payments/ledger-api-insecure was blocked due to the following policies 
+
+disallow-run-as-root:
+  autogen-drop-all-capabilities: 'validation failure: Containers must drop ALL capabilities.'
+  autogen-no-privilege-escalation: 'validation error: allowPrivilegeEscalation must
+    be false. rule autogen-no-privilege-escalation failed at path /spec/template/spec/containers/0/securityContext/'

@@ -1,0 +1,24 @@
+# kind cluster for the Dodo Payments assignment.
+#   create with:  kind create cluster --name dodo --config kind-config.yaml
+# The control-plane node is labelled ingress-ready and maps 80/443 to the host
+# so ingress-nginx (Task 1) and the Istio ingress gateway (Task 3) are reachable.
+kind: Cluster
+apiVersion: kind.x-k8s.io/v1alpha4
+name: dodo
+nodes:
+  - role: control-plane
+    kubeadmConfigPatches:
+      - |
+        kind: InitConfiguration
+        nodeRegistration:
+          kubeletExtraArgs:
+            node-labels: "ingress-ready=true"
+    extraPortMappings:
+      - containerPort: 80
+        hostPort: 80
+        protocol: TCP
+      - containerPort: 443
+        hostPort: 443
+        protocol: TCP
+  - role: worker
+  - role: worker

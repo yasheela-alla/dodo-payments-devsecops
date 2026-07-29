@@ -1,0 +1,19 @@
+# local reference clone of the starter (not part of submission)
+_starter/
+
+# python
+__pycache__/
+*.pyc
+.env
+
+# os / editor
+.DS_Store
+*.log
+*.swp
+
+# recon raw output can be large; keep curated results, ignore scratch
+task4-recon-pentest/recon/raw/
+
+# never commit plaintext secrets
+*secret*.plain.yaml
+*.dec.yaml

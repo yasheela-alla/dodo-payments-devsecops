@@ -1,0 +1,57 @@
+apiVersion: kyverno.io/v1
+kind: ClusterPolicy
+metadata:
+  name: disallow-run-as-root
+  annotations:
+    policies.kyverno.io/title: Disallow running as root
+    policies.kyverno.io/category: Pod Security, PCI DSS
+    policies.kyverno.io/severity: high
+    policies.kyverno.io/description: >-
+      Containers must run as a non-root user with privilege escalation disabled
+      and all Linux capabilities dropped. Backstops PSS restricted for any
+      namespace that isn't labelled, and gives a clear, policy-named rejection.
+spec:
+  validationFailureAction: Enforce
+  background: true
+  rules:
+    - name: run-as-non-root
+      match:
+        any:
+          - resources:
+              kinds: ["Pod"]
+      validate:
+        message: "Containers must set runAsNonRoot: true (no root)."
+        pattern:
+          spec:
+            =(securityContext):
+              =(runAsNonRoot): "true"
+            containers:
+              - =(securityContext):
+                  =(runAsNonRoot): "true"
+    - name: drop-all-capabilities
+      match:
+        any:
+          - resources:
+              kinds: ["Pod"]
+      validate:
+        message: "Containers must drop ALL capabilities."
+        foreach:
+          - list: request.object.spec.containers
+            deny:
+              conditions:
+                all:
+                  - key: "ALL"
+                    operator: AnyNotIn
+                    value: "{{ element.securityContext.capabilities.drop || `[]` }}"
+    - name: no-privilege-escalation
+      match:
+        any:
+          - resources:
+              kinds: ["Pod"]
+      validate:
+        message: "allowPrivilegeEscalation must be false."
+        pattern:
+          spec:
+            containers:
+              - securityContext:
+                  allowPrivilegeEscalation: "false"
