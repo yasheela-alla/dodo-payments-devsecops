@@ -62,7 +62,7 @@ jobs:
 
       # --- GATE: dependency CVEs --- HARD BLOCK on FIXABLE CRIT/HIGH only.
       - name: Trivy dependency scan (gating)
-        uses: aquasecurity/trivy-action@0.28.0
+        uses: aquasecurity/trivy-action@0.35.0
         with:
           scan-type: fs
           scan-ref: app
@@ -72,7 +72,7 @@ jobs:
           format: table
       - name: Trivy dependency scan (full SARIF, non-gating)
         if: always()
-        uses: aquasecurity/trivy-action@0.28.0
+        uses: aquasecurity/trivy-action@0.35.0
         with:
           scan-type: fs
           scan-ref: app
@@ -120,7 +120,7 @@ jobs:
 
       # --- GATE: image scan --- HARD BLOCK on FIXABLE CRIT/HIGH; SARIF uploaded.
       - name: Trivy image scan (gating)
-        uses: aquasecurity/trivy-action@0.28.0
+        uses: aquasecurity/trivy-action@0.35.0
         with:
           image-ref: ${{ env.IMAGE }}:${{ github.sha }}
           severity: CRITICAL,HIGH
@@ -129,7 +129,7 @@ jobs:
           format: table
       - name: Trivy image scan (full SARIF)
         if: always()
-        uses: aquasecurity/trivy-action@0.28.0
+        uses: aquasecurity/trivy-action@0.35.0
         with:
           image-ref: ${{ env.IMAGE }}:${{ github.sha }}
           format: sarif
@@ -161,7 +161,7 @@ jobs:
 
       # --- SBOM + attach as an attestation.
       - name: Generate SBOM (SPDX)
-        uses: aquasecurity/trivy-action@0.28.0
+        uses: aquasecurity/trivy-action@0.35.0
         with:
           image-ref: ${{ env.IMAGE }}@${{ steps.push.outputs.digest }}
           format: spdx-json
