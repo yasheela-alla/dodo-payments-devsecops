@@ -12,6 +12,15 @@ prove the controls hold.
 Everything runs **locally and free**: `kind` + Calico + Istio + GitHub Actions +
 GHCR. No cloud account required.
 
+## Full walkthrough (77s, live)
+
+One continuous run across all four tasks against the live cluster — hardening +
+admission rejection, signed-image verification, mTLS/identity-authz/egress
+containment, and the exploit-then-retest. Reproduce with `bash scripts/full-demo.sh`;
+a narrated video script is in [`docs/VIDEO-SCRIPT.md`](docs/VIDEO-SCRIPT.md).
+
+![Full walkthrough of all four tasks](docs/recordings/full-demo.gif)
+
 ---
 
 ## Repository map
