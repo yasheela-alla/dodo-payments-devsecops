@@ -118,3 +118,6 @@ captured in each task's `PROOF.txt` / `evidence/`. The GitHub-hosted proofs are 
 - **`cosign verify`** (workflow OIDC identity + Rekor): [`task2-cicd-supply-chain/proof/cosign-verify.txt`](task2-cicd-supply-chain/proof/cosign-verify.txt)
 - **SARIF in Security tab:** `semgrep`, `trivy-deps`, `trivy-image`
 - **ArgoCD drift → self-heal:** [`task2-cicd-supply-chain/argocd/DRIFT-SELFHEAL-PROOF.txt`](task2-cicd-supply-chain/argocd/DRIFT-SELFHEAL-PROOF.txt)
+- **Closed supply-chain loop** — CI signs → promotes digest to git → ArgoCD deploys → **Kyverno verifies the signature at admission** (unsigned rejected): [`task2-cicd-supply-chain/proof/SIGNED-IMAGE-ADMISSION-PROOF.txt`](task2-cicd-supply-chain/proof/SIGNED-IMAGE-ADMISSION-PROOF.txt)
+- **Live canary** (VirtualService/DestinationRule weighted routing, 90/10→50/50): [`task3-istio-zero-trust/canary/CANARY-PROOF.txt`](task3-istio-zero-trust/canary/CANARY-PROOF.txt)
+- **Pentest report** also as [HTML](task4-recon-pentest/report/Dodo-Payments-Security-Assessment.html) / [PDF](task4-recon-pentest/report/Dodo-Payments-Security-Assessment.pdf)

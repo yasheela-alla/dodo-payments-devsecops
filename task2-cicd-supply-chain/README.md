@@ -117,5 +117,23 @@ ArgoCD marks the app `OutOfSync`, and self-heal restores it to the git-declared
 - **SARIF in the Security tab:** three categories uploaded — `semgrep`, `trivy-deps`, `trivy-image`.
 - **GitOps drift/self-heal:** [`argocd/DRIFT-SELFHEAL-PROOF.txt`](argocd/DRIFT-SELFHEAL-PROOF.txt) — a manual `kubectl scale` to 5 was reverted to the git-declared 2 within ~10s.
 
+### Closed loop: CI signs → GitOps deploys → admission verifies
+
+The pipeline is multi-arch and **promotes the signed digest back into git**, so
+ArgoCD deploys *exactly* the image CI signed, and the Task-1 Kyverno
+`require-signed-images` policy verifies its signature at admission. Full proof:
+[`proof/SIGNED-IMAGE-ADMISSION-PROOF.txt`](proof/SIGNED-IMAGE-ADMISSION-PROOF.txt).
+
+```
+CI  ──sign(keyless)──▶ ghcr.io/.../ledger-api@sha256:d642d2af…
+    ──promote────────▶ git commit "ci: promote signed image … [skip ci]"  (be8bb76)
+ArgoCD ──sync────────▶ Deployment image = @sha256:d642d2af…  (Synced/Healthy)
+Kyverno verifyImages ▶ POSITIVE: pod annotated
+                       kyverno.io/verify-images: {"…@sha256:d642d2af…":"pass"}
+                     ▶ NEGATIVE: unsigned busybox blocked —
+                       "failed to verify image … keyless: no signatures found"
+```
+Only images signed by this repo's workflow identity can run in the cluster.
+
 > The pipeline runs entirely on GitHub's free runners against GHCR — no cloud
 > account. Local reproductions of every gate are in `scan-evidence/`.

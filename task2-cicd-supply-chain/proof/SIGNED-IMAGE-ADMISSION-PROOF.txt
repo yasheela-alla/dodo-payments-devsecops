@@ -1,0 +1,25 @@
+Closed CI -> GitOps -> Admission loop (Task 2 + Task 1 signed-image policy)
+===========================================================================
+
+1. CI built a MULTI-ARCH image, signed it keyless (cosign), and PROMOTED the
+   digest back into git:
+     commit be8bb76  "ci: promote signed image sha256:d642d2af... [skip ci]"
+     manifest image: ghcr.io/yasheela-alla/ledger-api@sha256:d642d2af4eaa5e7c2246fdf31a20f9a4be55241732b3cca1563bc6b58a47992a
+
+2. ArgoCD synced that commit and deployed the signed image (Synced/Healthy).
+
+3. Kyverno require-signed-images VERIFIED the cosign keyless signature at
+   admission (POSITIVE):
+     pod annotation:
+     kyverno.io/verify-images: {"ghcr.io/yasheela-alla/ledger-api@sha256:d642d2af...":"pass"}
+     -> both ledger-api pods Running the signed GHCR image.
+
+4. NEGATIVE control test — an UNSIGNED image is rejected at admission:
+     $ kubectl run unsigned-test --image=busybox:1.36 -n payments ...
+     resource Pod/payments/unsigned-test was blocked due to the following policies
+     require-signed-images:
+       verify-ghcr-ledger-api: 'failed to verify image docker.io/library/busybox:1.36:
+         .attestors[0].entries[0].keyless: no signatures found'
+
+=> Only images signed by THIS repo's GitHub Actions workflow can run in the
+   cluster. Supply chain: sign in CI, verify at admission.

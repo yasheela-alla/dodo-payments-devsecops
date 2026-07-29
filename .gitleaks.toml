@@ -8,6 +8,8 @@ useDefault = true
 [allowlist]
 description = "Documented, reviewed exceptions only"
 paths = [
+  # local-only reference clone of the starter (gitignored, never committed)
+  '''_starter/.*''',
   # SealedSecret: values are ASYMMETRICALLY ENCRYPTED (Bitnami). Only the
   # in-cluster controller can decrypt them; committing ciphertext is the point.
   '''task1-harden-workload/manifests/40-sealed-secret.yaml''',
