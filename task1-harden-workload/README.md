@@ -14,10 +14,10 @@ the insecure version impossible to deploy again.
 
 ## 📸 The cluster is real (OrbStack)
 
-kind nodes running as containers in OrbStack + the built images:
+kind nodes running as containers in OrbStack, and a kind node's boot log (arm64):
 
 ![OrbStack containers — kind nodes + vulntarget](../docs/screenshots/orbstack-containers.png)
-![OrbStack images — hardened ledger-api:0.1.0 + vuln target](../docs/screenshots/orbstack-images.png)
+![OrbStack — kind node boot logs](../docs/screenshots/orbstack-node-logs.png)
 
 ---
 

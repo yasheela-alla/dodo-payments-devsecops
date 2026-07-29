@@ -20,8 +20,7 @@ Pipeline: [`.github/workflows/ci.yml`](../.github/workflows/ci.yml)
 **SARIF in the Security tab** (Trivy + Semgrep code-scanning alerts):
 ![GitHub code scanning](../docs/screenshots/github-code-scanning.png)
 
-**ArgoCD — GitOps source of truth (Healthy / Synced):**
-![ArgoCD applications](../docs/screenshots/argocd-apps.png)
+**ArgoCD — GitOps source of truth (Healthy / Synced), full resource tree:**
 ![ArgoCD resource tree](../docs/screenshots/argocd-tree.png)
 
 ```
