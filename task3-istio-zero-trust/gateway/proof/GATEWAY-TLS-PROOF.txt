@@ -1,0 +1,8 @@
+=== Istio Ingress Gateway — TLS termination + routing (captured 20:49:09) ===
+--- 1. gateway serves the TLS cert (terminated at the edge) ---
+subject=CN=ledger.dodo.local, O=Dodo Payments Demo
+issuer=CN=ledger.dodo.local, O=Dodo Payments Demo
+--- 2. HTTPS -> gateway (TLS) -> in-mesh mTLS -> ledger-api /health ---
+{"status":"ok"}
+  HTTP 200
+--- 3. plaintext HTTP :80 is redirected to HTTPS (httpsRedirect) -> 307 ---

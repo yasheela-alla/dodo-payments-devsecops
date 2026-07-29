@@ -69,10 +69,14 @@ is sufficient; layered, a finding must defeat both.
 
 ## Bonus
 
-- **Ingress Gateway + TLS** — `gateway/40-gateway.yaml` terminates external TLS
-  at the Istio ingress gateway for `ledger.dodo.local`, forces HTTPS, and routes
-  to the workload over in-mesh mTLS. (Create the `ledger-tls` secret first, see
-  the file header.)
+- **Ingress Gateway + TLS** — `gateway/40-gateway.yaml` + `gateway/setup-gateway.sh`
+  terminate external TLS at the Istio ingress gateway for `ledger.dodo.local`,
+  force HTTPS, and route to the workload over in-mesh mTLS. **Proven end-to-end**
+  ([`gateway/proof/GATEWAY-TLS-PROOF.txt`](gateway/proof/GATEWAY-TLS-PROOF.txt)):
+  gateway serves the `CN=ledger.dodo.local` cert, HTTPS → `{"status":"ok"}` (200),
+  plaintext HTTP → **307** redirect to TLS. The gateway's SPIFFE identity
+  (`…/sa/istio-ingressgateway-service-account`) is an explicit allow in the
+  AuthorizationPolicy — everything else is still default-denied.
 - **Canary / blue-green** — `canary/50-canary.yaml`: `DestinationRule` subsets
   `v1/v2` + `VirtualService` weights (90/10). Shift weights to progress the
   canary; pin 100/0 ↔ 0/100 for blue-green. mTLS preserved via
