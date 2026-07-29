@@ -19,8 +19,3 @@ paths = [
   '''task4-recon-pentest/pentest/evidence/.*''',
   '''task4-recon-pentest/report/.*''',
 ]
-regexes = [
-  # Belt-and-suspenders: the specific fake demo/PoC tokens.
-  '''sk_live_[REDACTED-DEMO-KEY]''',
-  '''sk_live_[REDACTED-FAKE-POC-KEY]''',
-]
