@@ -1,0 +1,193 @@
+name: ci-secure-supply-chain
+
+# Build -> scan -> sign -> attest -> deploy(GitOps).
+# Security is enforced by the pipeline: each gate below states its fail policy.
+on:
+  push:
+    branches: [main]
+    paths: ["app/**", ".github/workflows/ci.yml"]
+  pull_request:
+    paths: ["app/**", ".github/workflows/ci.yml"]
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+
+env:
+  IMAGE: ghcr.io/${{ github.repository_owner }}/ledger-api
+
+jobs:
+  # ---------------------------------------------------------------------------
+  # 1. Source-level gates (run before we ever build): secrets + SAST + deps.
+  # ---------------------------------------------------------------------------
+  static-analysis:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      security-events: write   # upload SARIF to the Security tab
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0        # gitleaks needs full history
+
+      # --- GATE: secret scan --- HARD BLOCK on any finding.
+      - name: gitleaks (secrets)
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITLEAKS_ENABLE_UPLOAD_ARTIFACT: "false"
+
+      # --- GATE: SAST --- HARD BLOCK on ERROR-severity findings; SARIF uploaded.
+      # Full SARIF (all severities) is uploaded for visibility; the gate itself
+      # only fails on ERROR. Documented inline # nosemgrep suppressions carry a
+      # justification + compensating control and are triaged, not silent.
+      - name: Semgrep (SAST)
+        run: |
+          pip install semgrep==1.90.0
+          semgrep scan --config p/python --config p/flask \
+            --config p/security-audit --sarif --output semgrep.sarif app || true
+          # gating pass: fail only on ERROR-severity findings
+          semgrep scan --config p/python --config p/flask \
+            --config p/security-audit --severity ERROR --error app \
+            || echo "SEMGREP_EXIT=$?" >> "$GITHUB_ENV"
+      - name: Upload Semgrep SARIF
+        if: always()
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: semgrep.sarif
+          category: semgrep
+      - name: Enforce Semgrep policy
+        if: env.SEMGREP_EXIT != ''
+        run: |
+          echo "::error::Semgrep found ERROR-severity issues — blocking."; exit 1
+
+      # --- GATE: dependency CVEs --- HARD BLOCK on FIXABLE CRIT/HIGH only.
+      - name: Trivy dependency scan (gating)
+        uses: aquasecurity/trivy-action@0.28.0
+        with:
+          scan-type: fs
+          scan-ref: app
+          severity: CRITICAL,HIGH
+          ignore-unfixed: true          # CVE with no fix -> does not block (see policy)
+          exit-code: "1"
+          format: table
+      - name: Trivy dependency scan (full SARIF, non-gating)
+        if: always()
+        uses: aquasecurity/trivy-action@0.28.0
+        with:
+          scan-type: fs
+          scan-ref: app
+          format: sarif
+          output: trivy-deps.sarif
+          severity: CRITICAL,HIGH,MEDIUM
+      - name: Upload Trivy deps SARIF
+        if: always()
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: trivy-deps.sarif
+          category: trivy-deps
+
+  # ---------------------------------------------------------------------------
+  # 2. Build, image-scan, push, SIGN (keyless) + SLSA provenance + SBOM attest.
+  # ---------------------------------------------------------------------------
+  build-sign-attest:
+    needs: static-analysis
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write          # push to GHCR
+      id-token: write          # cosign keyless (OIDC) + attestations
+      security-events: write   # image-scan SARIF
+    outputs:
+      digest: ${{ steps.push.outputs.digest }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - uses: docker/setup-buildx-action@v3
+
+      - name: Build image (load locally for scanning first)
+        uses: docker/build-push-action@v6
+        with:
+          context: ./app
+          load: true
+          tags: ${{ env.IMAGE }}:${{ github.sha }}
+
+      # --- GATE: image scan --- HARD BLOCK on FIXABLE CRIT/HIGH; SARIF uploaded.
+      - name: Trivy image scan (gating)
+        uses: aquasecurity/trivy-action@0.28.0
+        with:
+          image-ref: ${{ env.IMAGE }}:${{ github.sha }}
+          severity: CRITICAL,HIGH
+          ignore-unfixed: true
+          exit-code: "1"
+          format: table
+      - name: Trivy image scan (full SARIF)
+        if: always()
+        uses: aquasecurity/trivy-action@0.28.0
+        with:
+          image-ref: ${{ env.IMAGE }}:${{ github.sha }}
+          format: sarif
+          output: trivy-image.sarif
+      - name: Upload Trivy image SARIF
+        if: always()
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: trivy-image.sarif
+          category: trivy-image
+
+      # Only images that passed every gate are pushed.
+      - name: Push image (by digest)
+        id: push
+        uses: docker/build-push-action@v6
+        with:
+          context: ./app
+          push: true
+          tags: |
+            ${{ env.IMAGE }}:${{ github.sha }}
+            ${{ env.IMAGE }}:latest-signed
+
+      - name: Install cosign
+        uses: sigstore/cosign-installer@v3
+
+      # --- SIGN: cosign keyless (Fulcio cert from GH OIDC, logged to Rekor).
+      - name: Cosign sign (keyless)
+        run: cosign sign --yes ${{ env.IMAGE }}@${{ steps.push.outputs.digest }}
+
+      # --- SBOM + attach as an attestation.
+      - name: Generate SBOM (SPDX)
+        uses: aquasecurity/trivy-action@0.28.0
+        with:
+          image-ref: ${{ env.IMAGE }}@${{ steps.push.outputs.digest }}
+          format: spdx-json
+          output: sbom.spdx.json
+      - name: Cosign attest SBOM (keyless)
+        run: |
+          cosign attest --yes --type spdxjson --predicate sbom.spdx.json \
+            ${{ env.IMAGE }}@${{ steps.push.outputs.digest }}
+
+      # --- SLSA provenance attestation (build provenance, keyless, in Rekor).
+      - name: SLSA build provenance
+        uses: actions/attest-build-provenance@v1
+        with:
+          subject-name: ${{ env.IMAGE }}
+          subject-digest: ${{ steps.push.outputs.digest }}
+          push-to-registry: true
+
+      # --- PROOF: verify our own signature in the same run.
+      - name: Cosign verify (proof)
+        run: |
+          cosign verify \
+            --certificate-identity-regexp "https://github.com/${{ github.repository }}/.github/workflows/.*" \
+            --certificate-oidc-issuer "https://token.actions.githubusercontent.com" \
+            ${{ env.IMAGE }}@${{ steps.push.outputs.digest }} | tee cosign-verify.txt
+      - name: Upload cosign verify output
+        uses: actions/upload-artifact@v4
+        with:
+          name: cosign-verify
+          path: cosign-verify.txt

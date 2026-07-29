@@ -1,0 +1,32 @@
+# ArgoCD is the source of truth for the payments workload. Anything applied by
+# hand that diverges from git is drift; selfHeal reverts it automatically.
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: ledger-api
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/yasheela-alla/dodo-payments-devsecops.git
+    targetRevision: main
+    path: task1-harden-workload/manifests
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: payments
+  syncPolicy:
+    automated:
+      prune: true       # delete resources removed from git
+      selfHeal: true    # revert manual kubectl drift back to git state
+      allowEmpty: false
+    syncOptions:
+      - CreateNamespace=false   # the namespace manifest is in git already
+      - ServerSideApply=true
+    retry:
+      limit: 3
+      backoff:
+        duration: 5s
+        maxDuration: 1m
+        factor: 2

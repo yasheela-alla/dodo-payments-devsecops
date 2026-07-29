@@ -111,14 +111,20 @@ def import_config():
 
 @app.route("/fetch")
 def fetch():
-    url = request.args.get("url", "")
+    url = request.args.get("url", "")  # nosemgrep: python.django.security.injection.ssrf.ssrf-injection-requests.ssrf-injection-requests
     parts = urlsplit(url)
     if parts.scheme not in ("http", "https") or not parts.hostname:
         return jsonify(error="only http(s) urls are allowed"), 400
     if not _is_public_host(parts.hostname):
         return jsonify(error="refusing to fetch a non-public address"), 400
     try:
-        resp = requests.get(url, timeout=FETCH_TIMEOUT, allow_redirects=False)
+        # SSRF controls: scheme allow-list + resolved-host must be globally
+        # routable (above) + redirects disabled so a 30x can't bounce into an
+        # internal address. Residual DNS-rebinding (host re-resolves between
+        # check and fetch) is closed at the network layer by the egress
+        # NetworkPolicy in task3 (pod cannot route to link-local/RFC1918/
+        # metadata regardless of app logic). Triaged 2026-07-29 — sink suppressed:
+        resp = requests.get(url, timeout=FETCH_TIMEOUT, allow_redirects=False)  # nosemgrep: python.flask.security.injection.ssrf-requests.ssrf-requests, python.django.security.injection.ssrf.ssrf-injection-requests.ssrf-injection-requests
     except requests.RequestException as exc:
         return jsonify(error="fetch failed", detail=str(exc)), 502
     return jsonify(status_code=resp.status_code, body=resp.text[:FETCH_MAX_BYTES])

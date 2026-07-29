@@ -1,0 +1,17 @@
+
+    ○
+    │╲
+    │ ○
+    ○ ░
+    ░    gitleaks
+
+Finding:     value: "[1;3;msk_live_[REDACTED-DEMO-KEY][0m"
+Secret:      [1;3;msk_live_[REDACTED-DEMO-KEY][0m
+RuleID:      stripe-access-token
+Entropy:     4.582119
+File:        _starter/deploy/deployment.yaml
+Line:        24
+Fingerprint: _starter/deploy/deployment.yaml:stripe-access-token:24
+
+[90m12:46PM[0m [32mINF[0m [1mscanned ~4162 bytes (4.16 KB) in 30.5ms[0m
+[90m12:46PM[0m [33mWRN[0m [1mleaks found: 1[0m
