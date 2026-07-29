@@ -12,6 +12,18 @@ Pipeline: [`.github/workflows/ci.yml`](../.github/workflows/ci.yml)
 
 ![Supply chain — signed GHCR image deployed, Kyverno verifies signature at admission (pass), unsigned image rejected](../docs/recordings/supplychain.gif)
 
+## 📸 Screenshots
+
+**Green pipeline** (multi-arch build → scan → sign → attest → promote):
+![GitHub Actions run](../docs/screenshots/github-actions-run.png)
+
+**SARIF in the Security tab** (Trivy + Semgrep code-scanning alerts):
+![GitHub code scanning](../docs/screenshots/github-code-scanning.png)
+
+**ArgoCD — GitOps source of truth (Healthy / Synced):**
+![ArgoCD applications](../docs/screenshots/argocd-apps.png)
+![ArgoCD resource tree](../docs/screenshots/argocd-tree.png)
+
 ```
  push ─▶ static-analysis ───────────────▶ build-sign-attest ───────────────▶ GitOps (ArgoCD)
          ├─ gitleaks   (secrets)          ├─ docker build (load, no push)      ├─ auto-sync

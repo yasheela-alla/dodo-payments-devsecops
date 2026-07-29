@@ -122,3 +122,4 @@ captured in each task's `PROOF.txt` / `evidence/`. The GitHub-hosted proofs are 
 - **Live canary** (VirtualService/DestinationRule weighted routing, 90/10→50/50): [`task3-istio-zero-trust/canary/CANARY-PROOF.txt`](task3-istio-zero-trust/canary/CANARY-PROOF.txt)
 - **Pentest report** also as [HTML](task4-recon-pentest/report/Dodo-Payments-Security-Assessment.html) / [PDF](task4-recon-pentest/report/Dodo-Payments-Security-Assessment.pdf)
 - **Terminal recordings (GIFs)** of every live demo: [`docs/recordings/`](docs/recordings) — hardening, zero-trust, supply-chain, pentest+retest
+- **UI screenshots** (GitHub Actions/Security, ArgoCD, OrbStack): [`docs/screenshots/`](docs/screenshots)

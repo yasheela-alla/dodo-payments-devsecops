@@ -12,6 +12,13 @@ the insecure version impossible to deploy again.
 
 ![Task 1 — hardened securityContext, least-priv RBAC, and admission rejecting the insecure Deployment](../docs/recordings/task1-hardening.gif)
 
+## 📸 The cluster is real (OrbStack)
+
+kind nodes running as containers in OrbStack + the built images:
+
+![OrbStack containers — kind nodes + vulntarget](../docs/screenshots/orbstack-containers.png)
+![OrbStack images — hardened ledger-api:0.1.0 + vuln target](../docs/screenshots/orbstack-images.png)
+
 ---
 
 ## What was wrong in the starter
