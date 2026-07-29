@@ -11,8 +11,13 @@ LEDGER_IP=$(kubectl get pod -n $NS -l app=ledger-api -o jsonpath='{.items[0].sta
 
 line "1. mTLS STRICT — PeerAuthentication"
 kubectl get peerauthentication -n $NS
-$ISTIOCTL authn tls-check "$LEDGER_POD.$NS" ledger-api.$NS.svc.cluster.local 2>/dev/null || \
-  echo "(tls-check: STRICT mode active on ledger-api)"
+# NOTE: `istioctl authn tls-check` was REMOVED in modern Istio (>=1.6, gone in
+# 1.30). The current equivalents that prove STRICT mTLS is enforced:
+echo "-- istioctl x describe pod (effective workload mTLS mode) --"
+$ISTIOCTL experimental describe pod "$LEDGER_POD" -n $NS 2>/dev/null | grep -iE "mTLS mode|STRICT" || true
+echo "-- inbound listener requires a client cert (Envoy enforces mTLS) --"
+$ISTIOCTL proxy-config listener "$LEDGER_POD.$NS" --port 15006 -o json 2>/dev/null \
+  | grep -o '"requireClientCertificate": *true' | head -1 || true
 
 line "2. mTLS — plaintext (non-mesh) request is REFUSED"
 # Run from istio-system (non-mesh, NP-allowed, not PSS-restricted) straight at

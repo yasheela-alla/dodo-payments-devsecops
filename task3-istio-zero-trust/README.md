@@ -30,7 +30,7 @@ task3-istio-zero-trust/
 
 | Control | Proof |
 |---------|-------|
-| **mTLS STRICT** | `PeerAuthentication` mode `STRICT`; `istioctl authn tls-check` confirms; a **non-mesh plaintext** request to `:8080` returns HTTP `000` (connection reset — mTLS required) |
+| **mTLS STRICT** | `PeerAuthentication` mode `STRICT`; `istioctl x describe pod` → **`Workload mTLS mode: STRICT`** and the inbound Envoy listener shows **`requireClientCertificate: true`**; a **non-mesh plaintext** request to `:8080` returns HTTP `000` (connection reset — mTLS required). *(The assignment names `istioctl authn tls-check`, which was **removed** in modern Istio — 1.30 here; the two commands above are its current equivalents.)* |
 | **Identity authz — allowed** | `reporting` SA → `/health` = **200** |
 | **Identity authz — denied** | `intruder` SA (network-reachable, in-mesh) → **403** — reachability ≠ authorization |
 | **NetworkPolicy egress** | `ledger-api` → `169.254.169.254` and → `1.1.1.1` both **time out** (blocked) — SSRF blast-radius = 0 |

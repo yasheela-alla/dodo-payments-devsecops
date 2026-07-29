@@ -1,8 +1,11 @@
 
 === 1. mTLS STRICT — PeerAuthentication ===
 NAME      MODE     AGE
-default   STRICT   6m33s
-(tls-check: STRICT mode active on ledger-api)
+default   STRICT   88m
+-- istioctl x describe pod (effective workload mTLS mode) --
+   Workload mTLS mode: STRICT
+-- inbound listener requires a client cert (Envoy enforces mTLS) --
+"requireClientCertificate": true
 
 === 2. mTLS — plaintext (non-mesh) request is REFUSED ===
 plaintext-HTTP=000nplaintext-REFUSED-connection-reset-mTLS-required
@@ -24,8 +27,8 @@ NP-allowed-http=000nBLOCKED-at-L4-NetworkPolicy-default-deny
 
 -- NetworkPolicies in namespace --
 NAME                         POD-SELECTOR                  AGE
-allow-dns-egress             <none>                        7m2s
-allow-istiod-egress          <none>                        7m2s
-default-deny-all             <none>                        7m2s
-ledger-api-ingress           app=ledger-api                7m2s
-reporting-to-ledger-egress   app in (intruder,reporting)   7m2s
+allow-dns-egress             <none>                        89m
+allow-istiod-egress          <none>                        89m
+default-deny-all             <none>                        89m
+ledger-api-ingress           app=ledger-api                89m
+reporting-to-ledger-egress   app in (intruder,reporting)   89m
