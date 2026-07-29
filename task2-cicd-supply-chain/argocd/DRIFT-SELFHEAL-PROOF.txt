@@ -1,0 +1,13 @@
+=== ArgoCD app status (source of truth = git) ===
+sync=Synced health=Healthy repo=https://github.com/yasheela-alla/dodo-payments-devsecops.git
+git desired replicas: 2
+
+=== BEFORE: live replicas = 2 ===
+=== INTRODUCE DRIFT: kubectl scale --replicas=5 (rogue manual change) ===
+deployment.apps/ledger-api scaled
+drifted live replicas = 5
+=== ArgoCD auto-detects OutOfSync and self-heals... ===
+  t+5s: replicas=5 argocd=OutOfSync
+  t+10s: replicas=2 argocd=Synced
+  >>> SELF-HEALED back to git state (2 replicas)
+=== AFTER: live replicas = 2 (matches git) ===

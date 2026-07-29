@@ -1,0 +1,8 @@
+
+Verification for ghcr.io/yasheela-alla/ledger-api:latest-signed --
+The following checks were performed on each of these signatures:
+  - The cosign claims were validated
+  - Existence of the claims in the transparency log was verified offline
+  - The code-signing certificate was verified using trusted certificate authority certificates
+
+[{"critical":{"identity":{"docker-reference":"ghcr.io/yasheela-alla/ledger-api:latest-signed"},"image":{"docker-manifest-digest":"sha256:880a2d83d83e498e8218f2468d1c32e722613dfe17fe8440c31fbd603a63b9ea"},"type":"https://slsa.dev/provenance/v1"},"optional":{}}]

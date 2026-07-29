@@ -101,7 +101,21 @@ ArgoCD marks the app `OutOfSync`, and self-heal restores it to the git-declared
   a blue-green variant is described there. (Chosen over Argo Rollouts to avoid a
   second controller and to keep traffic-shifting at the mesh layer.)
 
-> **Run status:** the pipeline runs on GitHub's free runners against GHCR (no
-> cloud account). Local reproductions of every gate are captured in
-> `scan-evidence/`. Live Actions run + `cosign verify` output are linked here
-> once the repo is pushed.
+## Live run (proof)
+
+- **Green pipeline:** https://github.com/yasheela-alla/dodo-payments-devsecops/actions/runs/30438516596
+- **Signed image:** https://github.com/yasheela-alla/dodo-payments-devsecops/pkgs/container/ledger-api
+- **`cosign verify` output:** [`proof/cosign-verify.txt`](proof/cosign-verify.txt) — signature validated against the workflow OIDC identity + Rekor transparency log:
+  ```
+  Verification for ghcr.io/yasheela-alla/ledger-api:latest-signed --
+    - The cosign claims were validated
+    - Existence of the claims in the transparency log was verified offline
+    - The code-signing certificate was verified using trusted certificate authority certificates
+  Subject:  https://github.com/yasheela-alla/dodo-payments-devsecops/.github/workflows/ci.yml@refs/heads/main
+  Issuer:   https://token.actions.githubusercontent.com
+  ```
+- **SARIF in the Security tab:** three categories uploaded — `semgrep`, `trivy-deps`, `trivy-image`.
+- **GitOps drift/self-heal:** [`argocd/DRIFT-SELFHEAL-PROOF.txt`](argocd/DRIFT-SELFHEAL-PROOF.txt) — a manual `kubectl scale` to 5 was reverted to the git-declared 2 within ~10s.
+
+> The pipeline runs entirely on GitHub's free runners against GHCR — no cloud
+> account. Local reproductions of every gate are in `scan-evidence/`.

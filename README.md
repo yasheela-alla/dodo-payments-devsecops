@@ -108,11 +108,13 @@ Sealed Secrets, ArgoCD, cosign, trivy, gitleaks, semgrep. Cluster config:
 
 ---
 
-## Status of live/hosted proofs
+## Live proofs
 
 Local proofs (cluster enforcement, scan gates, mesh policies, pentest PoCs) are
-captured in each task's `PROOF.txt` / `evidence/`. The GitHub-hosted proofs —
-live Actions run, `cosign verify` output, SARIF in the Security tab, and the
-ArgoCD sync/self-heal against the remote — activate once the repo is pushed to
-`github.com/yasheela-alla/dodo-payments-devsecops`; the workflow, ArgoCD
-Application, and Kyverno signing identity are already wired to that path.
+captured in each task's `PROOF.txt` / `evidence/`. The GitHub-hosted proofs are live:
+
+- **CI pipeline (green):** https://github.com/yasheela-alla/dodo-payments-devsecops/actions
+- **Signed image (GHCR):** https://github.com/yasheela-alla/dodo-payments-devsecops/pkgs/container/ledger-api
+- **`cosign verify`** (workflow OIDC identity + Rekor): [`task2-cicd-supply-chain/proof/cosign-verify.txt`](task2-cicd-supply-chain/proof/cosign-verify.txt)
+- **SARIF in Security tab:** `semgrep`, `trivy-deps`, `trivy-image`
+- **ArgoCD drift → self-heal:** [`task2-cicd-supply-chain/argocd/DRIFT-SELFHEAL-PROOF.txt`](task2-cicd-supply-chain/argocd/DRIFT-SELFHEAL-PROOF.txt)
