@@ -2,6 +2,10 @@
 # One continuous walkthrough of the whole assignment against the LIVE cluster.
 # Recorded to a terminal video (asciinema/mp4). Colour + banners for readability.
 export PATH="/opt/homebrew/bin:$PATH"
+# Pin every kubectl/istioctl call to the local kind cluster, so a different
+# default context (e.g. a corporate Teleport one) can't hijack the demo.
+kubectl(){ command kubectl --context kind-dodo "$@"; }
+istioctl(){ command istioctl --context kind-dodo "$@"; }
 NS=payments; T=http://localhost:9090; H=http://localhost:18082
 B=$(printf '\033[1;36m'); G=$(printf '\033[1;32m'); R=$(printf '\033[1;31m'); Y=$(printf '\033[1;33m'); D=$(printf '\033[2m'); X=$(printf '\033[0m')
 banner(){ echo; echo "${B}════════════════════════════════════════════════════════════${X}"; echo "${B}  $*${X}"; echo "${B}════════════════════════════════════════════════════════════${X}"; sleep 1.2; }
