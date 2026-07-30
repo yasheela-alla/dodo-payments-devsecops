@@ -16,4 +16,4 @@ raw recording and the `.gif` renders inline on GitHub.
 | Task 2 — supply chain | ![t2](supplychain.gif) | signed GHCR image deployed, Kyverno verify **pass**, unsigned image **rejected** |
 | Task 4 — pentest+retest | ![t4](pentest.gif) | PAN disclosure, YAML **RCE→secret exfil as root**, SSRF to internal svc; then **all closed** on the hardened app |
 
-Re-record any demo: `asciinema rec --overwrite <name>.cast -c "bash rec-<name>.sh" && agg <name>.cast <name>.gif`
+÷
